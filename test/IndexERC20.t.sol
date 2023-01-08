@@ -10,6 +10,7 @@ contract IndexERC20Test is Test {
     Token public a_tok;
     Token public b_tok;
     UniswapMock public uniswap_mock;
+    uint constant uniswap_balance = 10000000000000000000000000;
 
     IndexERC20 public index;
 
@@ -23,6 +24,10 @@ contract IndexERC20Test is Test {
         weights[0] = uint(100);
         tokens[1] = address(b_tok);
         weights[1] = uint(10);
+
+        for (uint i = 0; i < 2; ++i) {
+            Token(tokens[i]).addToken(address(uniswap_mock), uniswap_balance);
+        }
 
         index = new IndexERC20("IndexTestAB", "ITAB", tokens, weights, 10, address(uniswap_mock));
     }
@@ -43,8 +48,14 @@ contract IndexERC20Test is Test {
         buy(1, a1, 2300); // 2000(tokens) + 200(commision) and 100 back
         assertTrue(a1.balance == 300, "wrong account balance after buy");
         assertTrue(address(index).balance == 200, "wrong commission");
-        assertTrue(index.balanceOf(a1) == 1);
+
+        uint index_cnt = index.balanceOf(a1);
+        assertTrue(index_cnt == 1);
         
+        for (uint i = 0; i < index.c_count(); i++) {
+            assertTrue(index.s_tokens(i).balanceOf(address(uniswap_mock)) == uniswap_balance - index.s_weights(i) * index_cnt);
+            assertTrue(index.s_tokens(i).balanceOf(address(index)) == index.s_weights(i) * index_cnt);
+        }
     }
 
     function testErrorBuy() public {
@@ -63,6 +74,11 @@ contract IndexERC20Test is Test {
         assertTrue(a1.balance == 2300);
         assertTrue(index.balanceOf(a1) == 0);
         assertTrue(address(index).balance == 200);
+
+        for (uint i = 0; i < index.c_count(); i++) {
+            assertTrue(index.s_tokens(i).balanceOf(address(uniswap_mock)) == uniswap_balance);
+            assertTrue(index.s_tokens(i).balanceOf(address(index)) == 0);
+        }
     }
 
     function testErrorSell() public {

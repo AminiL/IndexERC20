@@ -10,7 +10,7 @@ contract UniswapMock is IUniswapV2Router01 {
     function tokenToEth(address token_, uint amount_, address to_) internal {
         Token t = Token(token_);
         uint w = t.getPriceInWei() * amount_;
-        t.removeToken(msg.sender, amount_);
+        t.transferFrom(msg.sender, address(this), amount_);
 
         (bool success, ) = payable(to_).call{value: w}("");
         require(success, "tokenToEth failed");
@@ -20,7 +20,7 @@ contract UniswapMock is IUniswapV2Router01 {
         Token t = Token(address(token_));
         require(wei_ >= t.getPriceInWei() * amount_, "uniswap mock: not enough wei");
         uint ret = wei_ - t.getPriceInWei() * amount_;
-        t.addToken(to_, amount_);
+        t.transfer(to_, amount_);
         (bool success, ) = payable(msg.sender).call{value: ret}("");
         require(success, "ethToToken failed");
     }
