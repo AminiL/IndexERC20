@@ -10,21 +10,8 @@ contract IndexERC20 is ERC20, Ownable {
     IERC20[] public s_tokens;
     uint[] public s_weights;
     
-    address public immutable c_exchanger; //= 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D; //v2
+    address public immutable c_exchanger; //= 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D; // uniswap v2
     uint public immutable c_commission; // % from buy
-    
-    // function createName(address[] memory erc20_contracts_) internal virtual view returns(string memory) {
-    //     string memory res = "Uniswap compatilable index: ";
-    //     for (uint i = 0; i < erc20_contracts_.length; i++) {
-    //         res = string.concat(res, " ");
-    //         res = string.concat(res, IERC20Metadata(erc20_contracts_[i]).symbol());
-    //     }
-    //     return res;
-    // }
-
-    // function createSymbol(address[] memory /*erc20_contracts_*/) internal virtual view returns(string memory) {
-    //     return "ERC20IND_UNISWAP";
-    // }
 
     constructor(
         string memory name_, 
@@ -69,26 +56,22 @@ contract IndexERC20 is ERC20, Ownable {
     }
 
     function buy(uint amount_) external payable {
-        //uint balance_before_tx = address(this).balance - msg.value;
         uint balance_after_tx = address(this).balance;
         uint spend_max = (msg.value * 100) / (100 + c_commission);
         uint spend = 0;
         for (uint i = 0; i < c_count; i++) {
-            // require(address(this).balance >= balance_before_tx + (spend * 100) / _commission, "not enought wei provided");
-            //buyToken(s_tokens[i], amount_ * s_weights[i], address(this).balance - (balance_before_tx + (spend * c_commission) / 100));
             require(spend <= spend_max, "not enough wei provided");
             buyToken(s_tokens[i], amount_ * s_weights[i], spend_max - spend);
             spend = balance_after_tx - address(this).balance;
         }
-        //require(address(this).balance >= balance_before_tx + (spend * 100) / _commission, "not enought wei provided for commision");
         _mint(msg.sender, amount_);
-        require(spend * (100 + c_commission) / 100 <= msg.value);
-        payable(msg.sender).transfer(msg.value - spend * (100 + c_commission) / 100);
-        //payable(msg.sender).transfer(address(this).balance - (balance_before_tx + (spend * _commission) / 100)); // return to sender
+        require(spend * (100 + c_commission) / 100 <= msg.value, "not enough wei provided for commision");
+        (bool success, ) = payable(msg.sender).call{value: msg.value - spend * (100 + c_commission) / 100}("");
+        require(success, "cannot send change back");
     }
 
     function sell(uint amount_) external {
-        require(balanceOf(msg.sender) >= amount_);
+        require(balanceOf(msg.sender) >= amount_, "not enough tokens on balance");
         for (uint i = 0; i < c_count; i++) {
             sellToken(s_tokens[i], amount_ * s_weights[i], msg.sender);
         }
@@ -96,16 +79,8 @@ contract IndexERC20 is ERC20, Ownable {
     }
 
     function getProfit() external onlyOwner {
-        payable(owner()).transfer(address(this).balance);
+        (bool success, ) = payable(owner()).call{value: address(this).balance}("");
+        require(success, "cannot send profit to owner");
     }
-
-    // function _afterTokenTransfer(
-    //     address /*from*/,
-    //     address to,
-    //     uint256 amount
-    // ) internal virtual override {
-    //     if (to == address(this)) {
-    //         transfer(owner(), amount);
-    //     }
-    // }
+    receive() external payable {}
 }

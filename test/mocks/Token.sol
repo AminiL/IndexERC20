@@ -6,9 +6,14 @@ interface Priceable {
     function getPriceInWei() external view returns(uint);
 }
 
-abstract contract Token is ERC20, Priceable {
+contract Token is ERC20, Priceable {
     uint internal PRICE;
-    function getPriceInWei() external view returns(uint) {
+
+    constructor(string memory name, string memory sym, uint price) ERC20(name, sym) {
+        PRICE = price;
+    }
+
+    function getPriceInWei() external view virtual override returns(uint) {
         return PRICE;
     }
 
@@ -22,14 +27,14 @@ abstract contract Token is ERC20, Priceable {
     }
 }
 
-contract TokenA is Token {
-    constructor() ERC20("TokenA", "A") {
-        PRICE = 10;
-    }
-}
+// contract TokenA is Token {
+//     constructor() ERC20("TokenA", "A") {
+//         PRICE = 10;
+//     }
+// }
 
-contract TokenB is Token {
-    constructor() ERC20("TokenB", "B") {
-        PRICE = 100;
-    }
-}
+// contract TokenB is Token {
+//     constructor() ERC20("TokenB", "B") {
+//         PRICE = 100;
+//     }
+// }
