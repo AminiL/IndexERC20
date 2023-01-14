@@ -9,3 +9,7 @@
 [submodule "lib/uniswap-v2-periphery"]
 	path = lib/uniswap-v2-periphery
 	url = https://github.com/Uniswap/uniswap-v2-periphery
+[submodule "lib/chainlink"]
+	path = lib/chainlink
+	url = https://github.com/smartcontractkit/chainlink
+	branch = v1.11.0
