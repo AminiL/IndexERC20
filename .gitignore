@@ -11,3 +11,5 @@ out/
 # Dotenv file
 .env
 test_scenario.txt
+script/trash/IndexNewIndex.s.sol
+script/trash/IndexNewIndexExternal.s.sol

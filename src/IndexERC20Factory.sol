@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.13;
 
 import "./IndexERC20.sol";
 
@@ -34,4 +34,6 @@ contract IndexERC20Factory is Ownable {
         (bool success, ) = payable(owner()).call{value: address(this).balance}("");
         require(success, "cannot send profit to owner");
     }
+
+    receive() external payable {} // from underlying indecies
 }
